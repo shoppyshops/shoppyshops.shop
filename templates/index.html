@@ -9,8 +9,6 @@
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <!-- HTMX SSE extension for real-time events -->
     <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
-    <!-- Hyperscript for animations -->
-    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
     
     <!-- Enable HTMX logging -->
     <script>
@@ -26,25 +24,6 @@
     </script>
     
     <style>
-        /* Toast notification animations */
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        
-        .toast-enter {
-            animation: slideIn 0.3s ease-out;
-        }
-        
-        .toast-exit {
-            animation: slideOut 0.3s ease-in;
-        }
-        
         .htmx-indicator {
             display: none;
         }
@@ -136,6 +115,12 @@
         hx-ext="sse"
         sse-connect="/shoppyshop/events/"
     >
+        <!-- Single notification that fades -->
+        <div 
+            id="current-notification"
+            hx-swap="innerHTML transition:fade"
+            hx-swap-oob="true"
+        >...</div>
         <!-- Connection status indicator -->
         <div 
             id="sse-status" 
@@ -146,11 +131,6 @@
             <span>Connecting...</span>
         </div>
 
-        <!-- Notifications will be added here -->
-        <div 
-            id="notifications"
-            sse-swap="beforeend"
-        ></div>
     </div>
 
     <!-- Event handlers -->
