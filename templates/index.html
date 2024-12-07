@@ -7,13 +7,9 @@
     
     <!-- HTMX for dynamic updates -->
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
     <!-- HTMX SSE extension for real-time events -->
     <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
-    
-    <!-- Enable HTMX logging -->
-    <script>
-        htmx.logAll();
-    </script>
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -115,6 +111,7 @@
         class="fixed bottom-4 right-4 space-y-2 z-50"
         hx-ext="sse"
         sse-connect="/shoppyshop/events/"
+        sse-swap="notification"
     >
         <!-- Connection status indicator -->
         <div 
@@ -127,14 +124,23 @@
 
     <!-- Event handlers -->
     <script>
+        // Enable HTMX logging
+        htmx.logAll();
+
         htmx.on('htmx:sseOpen', function() {
+            console.log('SSE Connected');
             document.getElementById('sse-status').innerHTML = 
                 '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2">';
         });
 
         htmx.on('htmx:sseError', function() {
+            console.log('SSE Error');
             document.getElementById('sse-status').innerHTML = 
                 '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2">';
+        });
+
+        htmx.on('htmx:sseMessage', function(evt) {
+            console.log('SSE Message:', evt.detail);
         });
     </script>
 </body>
