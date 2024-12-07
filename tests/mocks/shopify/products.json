@@ -1,0 +1,28 @@
+{
+    "products": [
+        {
+            "id": "123456789",
+            "title": "Test Product",
+            "description": "A test product for mock data",
+            "vendor": "Test Vendor",
+            "handle": "test-product",
+            "price": "29.99",
+            "quantity": 100,
+            "variants": [
+                {
+                    "id": "987654321",
+                    "title": "Default",
+                    "price": "29.99",
+                    "inventory_quantity": 100
+                }
+            ],
+            "images": [
+                {
+                    "id": "111222333",
+                    "src": "https://example.com/test-product.jpg",
+                    "position": 1
+                }
+            ]
+        }
+    ]
+} 
