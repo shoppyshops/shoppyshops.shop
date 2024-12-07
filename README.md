@@ -1,12 +1,12 @@
-# Artefact Project
+# ShoppyShops.shop
 
-A Django-based chat application with AI integration and real-time streaming capabilities.
+A Django-based e-commerce platform with AI integration and real-time streaming capabilities.
 
 ## Quick Start
 1. Clone the repository
    ```bash
-   git clone https://github.com/yeshuman/artefact.git
-   cd artefact
+   git clone https://github.com/shoppyshops/shoppyshops.shop.git
+   cd shoppyshops.shop
    ```
 
 2. Set up environment with Poetry
@@ -60,12 +60,12 @@ This project uses AI-assisted development with Cursor editor:
 
 ## Project Structure
 ```
-artefact/
-├── chats/              # Chat application
+shoppyshops.shop/
+├── apps/               # Django applications
 ├── static/             # Static files
 ├── templates/          # HTML templates
 ├── tests/              # Test suite
-└── artefact/           # Project settings
+└── config/             # Project settings
 ```
 
 ## Contributing
