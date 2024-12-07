@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = 'shoppyshop'
+
 urlpatterns = [
     path('webhooks/shopify/', views.shopify_webhook, name='shopify_webhook'),
     path('orders/', views.orders_list, name='orders_list'),

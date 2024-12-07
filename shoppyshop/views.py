@@ -19,12 +19,26 @@ async def shopify_webhook(request):
     Verifies the webhook and processes the order creation event.
     """
     try:
-        # Get ShoppyShop instance
+        # Log webhook headers
+        logger.info("Received Shopify webhook:")
+        logger.info(f"Headers: {dict(request.headers)}")
+        
+        # Get ShoppyShop instance and initialize services
         shop = await ShoppyShop.get_instance()
         
-        # Verify Shopify webhook (you might want to add more verification)
+        # Initialize services if needed
+        try:
+            await shop.initialize_services()
+        except Exception as e:
+            logger.error(f"Failed to initialize services: {e}")
+            return HttpResponse(status=503)  # Service Unavailable
+        
+        # Verify Shopify webhook
         hmac = request.headers.get('X-Shopify-Hmac-Sha256')
         topic = request.headers.get('X-Shopify-Topic')
+        
+        logger.info(f"Webhook topic: {topic}")
+        logger.info(f"HMAC: {hmac}")
         
         if not hmac or not topic:
             logger.error("Missing required Shopify webhook headers")
@@ -34,22 +48,31 @@ async def shopify_webhook(request):
             logger.info(f"Ignoring non-order webhook: {topic}")
             return HttpResponse(status=200)
             
-        # Parse the webhook data
         try:
             data = json.loads(request.body)
             order_id = data.get('id')
+            
             if not order_id:
                 logger.error("Missing order ID in webhook data")
                 return HttpResponse(status=400)
-                
-            # Emit order created event
+            
+            # Convert numeric ID to Shopify's gid format
+            gid = f"gid://shopify/Order/{order_id}"
+            logger.info(f"Converting order ID {order_id} to GID: {gid}")
+            
+            # Verify Shopify client exists
+            if not shop.shopify:
+                logger.error("Shopify client not available")
+                return HttpResponse(status=503)  # Service Unavailable
+            
+            # Emit order created event with properly formatted ID
             await shop.emit(ServiceEvent.ORDER_CREATED, {
-                'order_id': order_id,
+                'order_id': gid,
                 'source': 'shopify',
                 'raw_data': data
             })
             
-            logger.info(f"Successfully processed Shopify order webhook: {order_id}")
+            logger.info(f"Successfully processed Shopify order webhook: {gid}")
             return HttpResponse(status=200)
             
         except json.JSONDecodeError as e:
@@ -57,7 +80,7 @@ async def shopify_webhook(request):
             return HttpResponse(status=400)
             
     except Exception as e:
-        logger.error(f"Error processing Shopify webhook: {e}")
+        logger.error(f"Error processing Shopify webhook: {e}", exc_info=True)
         return HttpResponse(status=500)
 
 async def orders_list(request):

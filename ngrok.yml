@@ -1,0 +1,11 @@
+version: "2"
+authtoken: 2pstppAtkbiuZTwcMBwjgqB7rTO_5JwVv9HxWGomnaah5Ebpe
+region: ap
+web_addr: 127.0.0.1:8080
+
+tunnels:
+  django:
+    proto: http
+    addr: 8000
+    hostname: usefully-healthy-guppy.ngrok-free.app
+    inspect: false 
