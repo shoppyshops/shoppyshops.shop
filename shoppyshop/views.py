@@ -21,8 +21,6 @@ async def shopify_webhook(request):
     try:
         # Log webhook headers
         logger.info("Received Shopify webhook:")
-        # logger.info(f"Headers: {dict(request.headers)}")
-        # logger.info(f"META: {dict(request.META)}")
         
         # Get ShoppyShop instance and initialize services
         shop = await ShoppyShop.get_instance()
@@ -79,8 +77,8 @@ async def shopify_webhook(request):
                 'raw_data': data
             })
             
-            logger.info(f"Successfully processed Shopify order webhook: {gid}")
-            return HttpResponse(status=200)
+            logger.info(f"Queued Shopify order for processing: {gid}")
+            return HttpResponse(status=200)  # OK - Webhook received successfully
             
         except json.JSONDecodeError as e:
             logger.error(f"Invalid JSON in webhook body: {e}")

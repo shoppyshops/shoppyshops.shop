@@ -245,6 +245,7 @@ class ShoppyShop:
         try:
             source = data.get('source')
             order_id = data.get('order_id')
+            raw_data = data.get('raw_data')
             
             if not source or not order_id:
                 raise ValueError("Missing required order data")
@@ -252,11 +253,17 @@ class ShoppyShop:
             self.logger.info(f"Processing order from {source}: {order_id}")
             
             if source == 'shopify':
-                # Fetch complete order details using Shopify client
-                order = await self.shopify.get_order(order_id)
-                
-                # Process the order
-                await self._process_shopify_order(order)
+                # First try to process using raw webhook data if available
+                if raw_data:
+                    await self._process_shopify_order(raw_data)
+                else:
+                    # Fetch complete order details using Shopify client
+                    order = await self.shopify.get_order(order_id)
+                    if not order:
+                        raise ServiceClientError(f"Failed to fetch order details for {order_id}")
+                    
+                    # Process the order
+                    await self._process_shopify_order(order)
                 
             # Add handlers for other sources (eBay, Meta) here
             
@@ -274,6 +281,8 @@ class ShoppyShop:
         """
         try:
             order_id = order.get('id')
+            if not order_id:
+                raise ValueError("Order data missing ID field")
             
             # Process order logic here
             # For now, just emit the order processed event
@@ -283,6 +292,7 @@ class ShoppyShop:
                 'source': 'shopify',
                 'order_data': order
             })
+            self.logger.info(f"Successfully processed Shopify order: {order_id}")
             
         except Exception as e:
             self.logger.error(f"Error processing Shopify order: {e}")
