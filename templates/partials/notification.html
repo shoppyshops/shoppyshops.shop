@@ -1,8 +1,8 @@
 <div 
-    class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border-l-4 {% if type == 'error' %}border-red-500{% else %}border-green-500{% endif %}"
-    hx-swap-oob="afterbegin:#notifications-list"
+    class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border-l-4 {% if type == 'error' %}border-red-500{% else %}border-green-500{% endif %} min-w-[300px] transition-opacity duration-500"
+    hx-swap-oob="afterbegin:#notifications-container"
     hx-trigger="load delay:5s"
-    hx-swap="outerHTML transition:fade"
+    hx-swap="delete transition:opacity"
 >
     <div class="flex items-center">
         {% if type == 'error' %}

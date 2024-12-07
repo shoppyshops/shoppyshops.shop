@@ -79,7 +79,7 @@
             </section>
 
             <!-- Service Status Section -->
-            <section id="services-section" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <section id="services-section" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold">Service Status</h2>
                     <button 
@@ -109,26 +109,27 @@
                     </div>
                 </div>
             </section>
+
+            <!-- Status indicator -->
+            <div 
+                id="status-container"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6 text-sm text-gray-500 dark:text-gray-400"
+                hx-ext="sse"
+                sse-connect="/shoppyshop/events/"
+            >
+                <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+            </div>
+
+            <!-- Notifications container -->
+            <div
+                id="notifications-container"
+                class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 space-y-2"
+                hx-ext="sse"
+                sse-connect="/shoppyshop/events/"
+                sse-swap="notification"
+            ></div>
         </main>
     </div>
-    <!-- Status indicator -->
-    <div 
-        id="status-container"
-        class="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400 mb-2 z-50"
-        hx-ext="sse"
-        sse-connect="/shoppyshop/events/"
-    >
-        <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
-    </div>
-
-    <!-- Notifications container -->
-    <div
-        id="notifications-container"
-        class="fixed bottom-16 right-4 space-y-2 z-50"
-        hx-ext="sse"
-        sse-connect="/shoppyshop/events/"
-        sse-swap="notification"
-    ></div>
 
     <!-- Event handlers -->
     <script>
