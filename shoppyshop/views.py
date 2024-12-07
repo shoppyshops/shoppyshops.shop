@@ -103,7 +103,8 @@ async def orders_list(request):
             sort_key="CREATED_AT",
             reverse=True
         )
-        logger.info(f"Fetched orders: {orders}")
+        order_numbers = [order.get('orderNumber', 'N/A') for order in orders]
+        logger.info(f"Fetched {len(orders)} orders: {order_numbers}")
         return render(request, 'partials/orders_list.html', {'orders': orders})
     except Exception as e:
         logger.error(f"Error fetching orders: {e}")
