@@ -43,7 +43,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'daphne',
     'django.contrib.staticfiles',
+    'django_htmx',
+    'livereload',
     'shopify',
     'shoppyshop',
     'ebay',
@@ -65,7 +68,7 @@ ROOT_URLCONF = 'shoppyshops.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,7 +81,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'shoppyshops.wsgi.application'
+ASGI_APPLICATION = 'shoppyshops.asgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -132,10 +135,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Shopify settings
 SHOPIFY_API_KEY = env('SHOPIFY_API_KEY')
 SHOPIFY_API_SECRET = env('SHOPIFY_API_SECRET')
-SHOPIFY_API_ACCESS_TOKEN = env('SHOPIFY_API_ACCESS_TOKEN')
+SHOPIFY_ACCESS_TOKEN = env('SHOPIFY_ACCESS_TOKEN')
+SHOPIFY_URL = env('SHOPIFY_URL')
+SHOPIFY_API_VERSION = env('SHOPIFY_API_VERSION')
 
 # eBay settings
 EBAY_ENV = env('EBAY_ENV')
+EBAY_DEV_ID = env('EBAY_DEV_ID')
+EBAY_USER_TOKEN = env('EBAY_USER_TOKEN')
 EBAY_APP_ID = env('EBAY_PROD_APP_ID') if EBAY_ENV == 'production' else env('EBAY_SANDBOX_APP_ID')
 EBAY_CERT_ID = env('EBAY_PROD_CERT_ID') if EBAY_ENV == 'production' else env('EBAY_SANDBOX_CERT_ID')
 

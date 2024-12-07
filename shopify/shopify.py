@@ -7,6 +7,7 @@ from shoppyshop.shoppyshop import (
     OrderBase
 )
 import httpx
+from urllib.parse import urlparse
 
 
 class ShopifyProduct(ProductBase):
@@ -37,7 +38,16 @@ class Shopify(ServiceBase):
         self.api_key = credentials['api_key']
         self.api_secret = credentials['api_secret']
         self.access_token = credentials['access_token']
-        self.shop_url = credentials['shop_url']
+        
+        # Handle both full URLs and domain-only URLs
+        shop_url = credentials['shop_url']
+        if 'http' in shop_url:
+            # Extract domain from full URL
+            parsed = urlparse(shop_url)
+            self.shop_url = parsed.netloc
+        else:
+            self.shop_url = shop_url
+            
         self.api_version = credentials['api_version']
         self.client = None
         self.graphql_url = f"https://{self.shop_url}/admin/api/{self.api_version}/graphql.json"

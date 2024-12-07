@@ -1,0 +1,23 @@
+{% if orders %}
+    <div class="space-y-4">
+        {% for order in orders %}
+        <div class="border-b dark:border-gray-700 pb-4 last:border-0">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="font-medium">{{ order.orderNumber }}</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ order.createdAt|date:"M d, Y H:i" }}</p>
+                </div>
+                <span class="px-2 py-1 text-sm rounded-full {% if order.financialStatus == 'PAID' %}bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200{% else %}bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200{% endif %}">
+                    {{ order.fulfillmentStatus }}
+                </span>
+            </div>
+            <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {{ order.lineItems|length }} item{{ order.lineItems|length|pluralize }}
+                • {{ order.totalPrice.currency }} {{ order.totalPrice.amount }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-gray-500 dark:text-gray-400">No recent orders found.</p>
+{% endif %} 

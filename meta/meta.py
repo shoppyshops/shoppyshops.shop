@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TypedDict
 from shoppyshop.shoppyshop import (
     ServiceBase,
     ServiceClientError,
