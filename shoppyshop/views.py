@@ -232,7 +232,9 @@ async def event_stream(request):
             while True:
                 event = await queue.get()
                 logger.info(f"Got event for {connection_id}: {event}")
-                yield f"event: {event['event']}\ndata: {json.dumps(event['data'])}\n\n"
+                # Format SSE event with proper newlines
+                event_data = json.dumps(event['data'])
+                yield f"event: {event['event']}\ndata: {event_data}\n\n"
         except Exception as e:
             logger.error(f"Error in event stream for {connection_id}: {e}")
             # Send error event
@@ -255,10 +257,5 @@ async def event_stream(request):
     response['Cache-Control'] = 'no-cache'
     response['Connection'] = 'keep-alive'
     response['X-Accel-Buffering'] = 'no'
-    
-    # Add CORS headers if needed (in case django-cors-headers doesn't catch this response)
-    if 'HTTP_ORIGIN' in request.META:
-        response['Access-Control-Allow-Origin'] = request.META['HTTP_ORIGIN']
-        response['Access-Control-Allow-Credentials'] = 'true'
     
     return response

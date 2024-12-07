@@ -139,19 +139,37 @@
         hx-swap="beforeend"
         sse-subscribe="notification"
     >
-        <!-- Connection status indicator with inline event handlers -->
+        <!-- Connection status indicator -->
         <div 
             id="sse-status" 
             class="text-sm text-gray-500 dark:text-gray-400 mb-2"
             hx-ext="sse"
             sse-connect="/shoppyshop/events/"
-            hx-on="htmx:sseOpen: this.innerHTML='<span class=\'inline-block w-2 h-2 rounded-full bg-green-500 mr-2\'></span>Connected to event stream'
-                   htmx:sseError: this.innerHTML='<span class=\'inline-block w-2 h-2 rounded-full bg-red-500 mr-2\'></span>Error connecting to event stream'"
         >
             <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
             Connecting to event stream...
         </div>
     </div>
+
+    <!-- Event handlers -->
+    <script>
+        htmx.on('htmx:sseOpen', function(evt) {
+            document.getElementById('sse-status').innerHTML = 
+                '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>' +
+                'Connected to event stream';
+        });
+
+        htmx.on('htmx:sseError', function(evt) {
+            document.getElementById('sse-status').innerHTML = 
+                '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>' +
+                'Error connecting to event stream';
+        });
+
+        // Debug logging
+        htmx.on('htmx:sseMessage', function(evt) {
+            console.log('SSE Message:', evt.detail);
+        });
+    </script>
 </body>
 </html>
 
