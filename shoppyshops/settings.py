@@ -12,22 +12,28 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 import os
 from pathlib import Path
+import environ
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Initialize environment variables
+env = environ.Env(
+    DEBUG=(bool, False),
+    EBAY_ENV=(str, 'sandbox'),
+    META_ENV=(str, 'sandbox'),
+)
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+# Read environment variables from .env file
+environ.Env.read_env(BASE_DIR / '.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%!)cws5^9efmv4yt!4##c^y$62q_%*x8tax*e377(*^xe8g6t%'
+SECRET_KEY = env('SECRET_KEY', default='your-default-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG', default=True)
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -74,7 +80,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'shoppyshops.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -84,7 +89,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -104,7 +108,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -116,7 +119,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -127,19 +129,18 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# Shopify
-SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
-SHOPIFY_API_SECRET = os.getenv('SHOPIFY_API_SECRET')
-SHOPIFY_API_ACCESS_TOKEN = os.getenv('SHOPIFY_API_ACCESS_TOKEN')
+# Shopify settings
+SHOPIFY_API_KEY = env('SHOPIFY_API_KEY')
+SHOPIFY_API_SECRET = env('SHOPIFY_API_SECRET')
+SHOPIFY_API_ACCESS_TOKEN = env('SHOPIFY_API_ACCESS_TOKEN')
 
 # eBay settings
-EBAY_ENV = env('EBAY_ENV', default='sandbox')
+EBAY_ENV = env('EBAY_ENV')
 EBAY_APP_ID = env('EBAY_PROD_APP_ID') if EBAY_ENV == 'production' else env('EBAY_SANDBOX_APP_ID')
 EBAY_CERT_ID = env('EBAY_PROD_CERT_ID') if EBAY_ENV == 'production' else env('EBAY_SANDBOX_CERT_ID')
 
 # Meta settings
-META_ENV = env('META_ENV', default='sandbox')
+META_ENV = env('META_ENV')
 META_APP_ID = env('META_PROD_APP_ID') if META_ENV == 'production' else env('META_SANDBOX_APP_ID')
 META_APP_SECRET = env('META_PROD_APP_SECRET') if META_ENV == 'production' else env('META_SANDBOX_APP_SECRET')
 META_ACCESS_TOKEN = env('META_PROD_ACCESS_TOKEN') if META_ENV == 'production' else env('META_SANDBOX_ACCESS_TOKEN')

@@ -4,13 +4,6 @@ version = "0.1.0"
 description = "AI-assisted e-commerce platform integration"
 authors = ["Daryl Antony <daryl@shoppyshops.shop>"]
 readme = "README.md"
-packages = [
-    {include = "shoppyshops"},
-    {include = "shopify"},
-    {include = "ebay"},
-    {include = "meta"},
-    {include = "shoppyshop"}
-]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -24,6 +17,7 @@ pydantic = "^2.10.3"
 httpx = "^0.28.1"
 python-dotenv = "^1.0.1"
 uuid = "^1.30"
+django-environ = "^0.11.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
@@ -37,7 +31,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-django_settings_module = "shoppyshops.settings"
+DJANGO_SETTINGS_MODULE = "shoppyshops.settings"
 python_files = "test_*.py"
 python_functions = "test_*"
 testpaths = ["tests"]
