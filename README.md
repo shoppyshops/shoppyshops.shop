@@ -80,25 +80,21 @@ There are several ways to run tests:
 
 1. Run tests once:
    ```bash
-   pytest
+   pytest  # Uses mocks by default
+   pytest -m real  # Uses real API calls
    ```
 
 2. Watch mode (automatically run tests when files change):
    ```bash
-   ptw .  # Interactive mode
-   # OR
-   ptw . --now  # Run tests immediately and watch for changes
+   ptw .                  # Interactive mode with mocks
+   ptw . --now            # Run immediately with mocks
+   ptw . "-m real" --now  # Run real API tests immediately
    ```
-   
-   Interactive controls in watch mode:
-   - `Enter`: Run tests manually
-   - `r`: Reset runner arguments
-   - `c`: Change runner arguments
-   - `f`: Run only failed tests
-   - `p`: Enable PDB debugger on failures
-   - `v`: Increase verbosity
-   - `e`: Clear screen
-   - `q`: Quit watcher
+
+   The last command breaks down as:
+   - `ptw .` - Watch current directory
+   - `"-m real"` - Only run tests marked with @pytest.mark.real
+   - `--now` - Run tests immediately
 
 3. Watch mode with coverage reporting:
    ```bash
@@ -110,16 +106,4 @@ There are several ways to run tests:
    pytest --cov=shoppyshops --cov-report=html
    ```
 
-## Development Servers
-Run these in separate terminals:
-
-```bash
-# Terminal 1: Django development server
-./manage.py runserver
-
-# Terminal 2: Live reload
-./manage.py livereload
-
-# Terminal 3: Test watcher
-ptw . --now  # Run tests immediately and watch for changes
-```
+Note: The `--use-real-api` flag will make real API calls to external services. Make sure you have the necessary API keys configured in your `.env` file before using this flag.
