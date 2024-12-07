@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -125,3 +126,20 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Shopify
+SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
+SHOPIFY_API_SECRET = os.getenv('SHOPIFY_API_SECRET')
+SHOPIFY_API_ACCESS_TOKEN = os.getenv('SHOPIFY_API_ACCESS_TOKEN')
+
+# eBay settings
+EBAY_ENV = env('EBAY_ENV', default='sandbox')
+EBAY_APP_ID = env('EBAY_PROD_APP_ID') if EBAY_ENV == 'production' else env('EBAY_SANDBOX_APP_ID')
+EBAY_CERT_ID = env('EBAY_PROD_CERT_ID') if EBAY_ENV == 'production' else env('EBAY_SANDBOX_CERT_ID')
+
+# Meta settings
+META_ENV = env('META_ENV', default='sandbox')
+META_APP_ID = env('META_PROD_APP_ID') if META_ENV == 'production' else env('META_SANDBOX_APP_ID')
+META_APP_SECRET = env('META_PROD_APP_SECRET') if META_ENV == 'production' else env('META_SANDBOX_APP_SECRET')
+META_ACCESS_TOKEN = env('META_PROD_ACCESS_TOKEN') if META_ENV == 'production' else env('META_SANDBOX_ACCESS_TOKEN')

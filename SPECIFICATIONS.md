@@ -19,7 +19,9 @@ META_ACCESS_TOKEN=''
 META_ACCOUNT_ID=''
 ```
 
-### Service Classes (`shoppyshop/services.py`)
+### Service Classes
+
+#### Main Controller (`shoppyshop/shoppyshop.py`)
 ```python
 class ShoppyShop:
     """Main controller class managing service integrations"""
@@ -39,45 +41,66 @@ class ShoppyShop:
             token=settings.META_ACCESS_TOKEN,
             account_id=settings.META_ACCOUNT_ID
         )
-
+    
     async def sync_inventory(self):
         """Cross-platform inventory synchronization"""
+        pass
     
     async def process_orders(self):
         """Order processing and fulfillment"""
+        pass
 
+#### Shopify Integration (`shopify/shopify.py`)
+```python
 class Shopify:
     """Shopify store management interface"""
-    token: str
-    store_url: str
+    def __init__(self, token: str, store_url: str):
+        self.token = token
+        self.store_url = store_url
     
     async def get_products(self):
         """Retrieve product catalog"""
+        pass
     
     async def update_inventory(self):
         """Update product inventory"""
+        pass
+```
 
+#### eBay Integration (`ebay/ebay.py`)
+```python
 class Ebay:
     """eBay fulfillment management interface"""
-    token: str
-    account_id: str
+    def __init__(self, app_id: str, cert_id: str, dev_id: str, auth_token: str):
+        self.app_id = app_id
+        self.cert_id = cert_id
+        self.dev_id = dev_id
+        self.auth_token = auth_token
     
     async def list_product(self):
         """List product on eBay"""
+        pass
     
     async def process_order(self):
         """Process eBay order"""
+        pass
+```
 
+#### Meta Integration (`meta/meta.py`)
+```python
 class Meta:
     """Meta advertising insights interface (read-only)"""
-    token: str
-    account_id: str
+    def __init__(self, token: str, account_id: str):
+        self.token = token
+        self.account_id = account_id
     
     async def get_campaign_insights(self):
         """Retrieve campaign performance data"""
+        pass
     
     async def get_catalog_stats(self):
         """Get product catalog statistics"""
+        pass
 ```
 
 ## Django Apps and Models
@@ -159,10 +182,16 @@ shoppyshops.shop/
 │   ├── urls.py
 │   └── wsgi.py
 ├── shoppyshop/         # Main service integration app
-│   └── services.py     # Service classes
+│   └── shoppyshop.py   # Main controller class
 ├── shopify/            # Shopify integration
+│   ├── shopify.py      # Shopify service class
+│   └── models.py       # Shopify models
 ├── ebay/              # eBay integration
+│   ├── ebay.py        # eBay service class
+│   └── models.py      # eBay models
 ├── meta/              # Meta integration (read-only)
+│   ├── meta.py        # Meta service class
+│   └── models.py      # Meta models
 ├── static/            # Static files
 ├── templates/         # HTML templates
 ├── tests/             # Test suite
