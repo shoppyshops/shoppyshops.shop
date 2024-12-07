@@ -174,7 +174,7 @@ async def event_stream(request):
                 'message': event_data.get('message', 'Update received'),
                 'timestamp': datetime.now()
             })
-            logger.info(f"Rendered notification for {connection_id}: {notification_html[:100]}...")
+            logger.debug(f"Rendered notification HTML: {notification_html!r}")
             
             await queue.put({
                 'event': 'notification',
@@ -232,9 +232,10 @@ async def event_stream(request):
             while True:
                 event = await queue.get()
                 logger.info(f"Got event for {connection_id}: {event}")
-                # Format SSE event with proper newlines
-                event_data = json.dumps(event['data'])
-                yield f"event: {event['event']}\ndata: {event_data}\n\n"
+                # Format SSE event - don't JSON encode HTML content
+                message = f"event: {event['event']}\ndata: {event['data']}\n\n"
+                logger.debug(f"Sending SSE message: {message!r}")
+                yield message
         except Exception as e:
             logger.error(f"Error in event stream for {connection_id}: {e}")
             # Send error event

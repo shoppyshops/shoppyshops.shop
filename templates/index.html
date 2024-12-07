@@ -119,14 +119,12 @@
         <!-- Single notification that fades -->
         <div 
             id="current-notification"
-            hx-swap="innerHTML transition:fade"
             hx-swap-oob="true"
         >...</div>
         <!-- Connection status indicator -->
         <div 
             id="sse-status" 
             class="text-sm text-gray-500 dark:text-gray-400 mb-2"
-            sse-swap="innerHTML"
         >
             <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
         </div>
@@ -135,32 +133,14 @@
 
     <!-- Event handlers -->
     <script>
-        // Log all HTMX events
-        htmx.logger = function(elt, event, data) {
-            if(console) {
-                console.log('HTMX Event:', event, 'Data:', data);
-            }
-        }
-
-        htmx.on('htmx:sseOpen', function(evt) {
-            console.log('SSE Connection Opened');
+        htmx.on('htmx:sseOpen', function() {
             document.getElementById('sse-status').innerHTML = 
-                '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>'
+                '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2">';
         });
 
-        htmx.on('htmx:sseError', function(evt) {
-            console.log('SSE Connection Error:', evt);
+        htmx.on('htmx:sseError', function() {
             document.getElementById('sse-status').innerHTML = 
-                '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>'
-        });
-
-        // Debug logging for all SSE events
-        htmx.on('htmx:sseMessage', function(evt) {
-            console.log('SSE Message Received:', {
-                event: evt.detail.event,
-                data: evt.detail.data,
-                raw: evt
-            });
+                '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2">';
         });
     </script>
 </body>
