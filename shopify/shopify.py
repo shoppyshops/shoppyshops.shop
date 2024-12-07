@@ -166,11 +166,89 @@ class Shopify(ServiceBase):
         return True
     
     async def get_orders(self, status: Optional[str] = None) -> List[ShopifyOrder]:
-        """Get orders with optional status filter"""
+        """Get orders with optional status filter using GraphQL"""
         if not self.client:
             raise ServiceClientError("Shopify client not initialized")
-        # TODO: Implement order retrieval
-        return []
+        
+        query = """
+        query getOrders($first: Int!, $query: String) {
+          orders(first: $first, query: $query) {
+            edges {
+              node {
+                id
+                name
+                email
+                phone
+                displayFulfillmentStatus
+                displayFinancialStatus
+                totalPriceSet {
+                  shopMoney {
+                    amount
+                    currencyCode
+                  }
+                }
+                lineItems(first: 10) {
+                  edges {
+                    node {
+                      id
+                      name
+                      quantity
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """
+        
+        variables = {
+            'first': 10,
+            'query': f"status:{status}" if status else None
+        }
+        
+        try:
+            response = await self.client.post(
+                self.graphql_url,
+                json={
+                    'query': query,
+                    'variables': variables
+                }
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if 'errors' in data:
+                print(f"GraphQL errors in get_orders: {data['errors']}")
+                raise ServiceClientError(f"GraphQL Error: {data['errors']}")
+            
+            # Transform the GraphQL response into our order type
+            orders = []
+            for edge in data['data']['orders']['edges']:
+                node = edge['node']
+                orders.append({
+                    'id': node['id'],
+                    'orderNumber': node['name'].replace('#', ''),  # Extract number from name field
+                    'email': node['email'],
+                    'phone': node['phone'],
+                    'fulfillmentStatus': node['displayFulfillmentStatus'],
+                    'financialStatus': node['displayFinancialStatus'],
+                    'total': float(node['totalPriceSet']['shopMoney']['amount']),
+                    'items': [
+                        {
+                            'id': item['node']['id'],
+                            'name': item['node']['name'],
+                            'quantity': item['node']['quantity']
+                        }
+                        for item in node['lineItems']['edges']
+                    ]
+                })
+            
+            return orders
+            
+        except httpx.HTTPError as e:
+            print(f"HTTP error in get_orders: {str(e)}")
+            raise ServiceClientError(f"Failed to fetch orders: {str(e)}")
     
     async def get_order(self, order_id: str) -> Dict[str, Any]:
         """
@@ -190,11 +268,10 @@ class Shopify(ServiceBase):
           order(id: $id) {
             id
             name
-            orderNumber
             email
             phone
-            fulfillmentStatus
-            financialStatus
+            displayFulfillmentStatus
+            displayFinancialStatus
             totalPriceSet {
               shopMoney {
                 amount
@@ -262,9 +339,49 @@ class Shopify(ServiceBase):
             data = response.json()
             
             if 'errors' in data:
+                print(f"GraphQL errors in get_order: {data['errors']}")
                 raise ServiceClientError(f"GraphQL Error: {data['errors']}")
             
-            return data['data']['order']
+            order_data = data['data']['order']
+            
+            # Transform the response to match our expected format
+            return {
+                'id': order_data['id'],
+                'orderNumber': order_data['name'].replace('#', ''),
+                'email': order_data['email'],
+                'phone': order_data['phone'],
+                'fulfillmentStatus': order_data['displayFulfillmentStatus'],
+                'financialStatus': order_data['displayFinancialStatus'],
+                'totalPrice': {
+                    'amount': order_data['totalPriceSet']['shopMoney']['amount'],
+                    'currency': order_data['totalPriceSet']['shopMoney']['currencyCode']
+                },
+                'subtotalPrice': {
+                    'amount': order_data['subtotalPriceSet']['shopMoney']['amount'],
+                    'currency': order_data['subtotalPriceSet']['shopMoney']['currencyCode']
+                },
+                'shippingPrice': {
+                    'amount': order_data['totalShippingPriceSet']['shopMoney']['amount'],
+                    'currency': order_data['totalShippingPriceSet']['shopMoney']['currencyCode']
+                },
+                'totalTax': {
+                    'amount': order_data['totalTaxSet']['shopMoney']['amount'],
+                    'currency': order_data['totalTaxSet']['shopMoney']['currencyCode']
+                },
+                'lineItems': [
+                    {
+                        'id': item['node']['id'],
+                        'name': item['node']['name'],
+                        'quantity': item['node']['quantity'],
+                        'originalPrice': item['node']['originalUnitPrice'],
+                        'discountedPrice': item['node']['discountedUnitPrice'],
+                        'variant': item['node']['variant']
+                    }
+                    for item in order_data['lineItems']['edges']
+                ],
+                'shippingAddress': order_data['shippingAddress']
+            }
             
         except httpx.HTTPError as e:
+            print(f"HTTP error in get_order: {str(e)}")
             raise ServiceClientError(f"Failed to fetch order: {str(e)}")
