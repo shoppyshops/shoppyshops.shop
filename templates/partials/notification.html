@@ -1,7 +1,6 @@
 <div 
     class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border-l-4 {% if type == 'error' %}border-red-500{% else %}border-green-500{% endif %}"
-    hx-swap-oob="true"
-    id="current-notification"
+    hx-swap-oob="beforeend:#notifications-container"
     hx-trigger="load delay:5s"
     hx-swap="outerHTML transition:fade"
 >
