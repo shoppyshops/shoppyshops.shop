@@ -235,8 +235,9 @@ async def event_stream(request):
             while True:
                 event = await queue.get()
                 logger.info(f"Got event for {connection_id}: {event}")
-                # Send the event data directly without JSON encoding
-                message = f"event: {event['event']}\ndata: {event['data']}\n\n"
+                # Format SSE message according to HTMX requirements
+                data = event['data'].replace('\n', ' ').strip()
+                message = f"event: {event['event']}\ndata: {data}\n\n"
                 logger.debug(f"Sending SSE message: {message!r}")
                 yield message
         except Exception as e:
