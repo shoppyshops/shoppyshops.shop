@@ -12,6 +12,11 @@
     <!-- Hyperscript for animations -->
     <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
     
+    <!-- Enable HTMX logging -->
+    <script>
+        htmx.logAll();
+    </script>
+    
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -134,27 +139,17 @@
         hx-swap="beforeend"
         sse-subscribe="notification"
     >
-        <!-- Connection status indicator -->
-        <div id="sse-status" class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+        <!-- Connection status indicator with inline event handlers -->
+        <div 
+            id="sse-status" 
+            class="text-sm text-gray-500 dark:text-gray-400 mb-2"
+            hx-ext="sse"
+            sse-connect="/shoppyshop/events/"
+            hx-on="htmx:sseOpen: this.innerHTML='<span class=\'inline-block w-2 h-2 rounded-full bg-green-500 mr-2\'></span>Connected to event stream'
+                   htmx:sseError: this.innerHTML='<span class=\'inline-block w-2 h-2 rounded-full bg-red-500 mr-2\'></span>Error connecting to event stream'"
+        >
             <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
             Connecting to event stream...
-        </div>
-
-        <!-- SSE status handlers -->
-        <div 
-            hx-ext="sse" 
-            sse-connect="/shoppyshop/events/"
-            sse-swap="none"
-        >
-            <!-- Connection established -->
-            <div 
-                hx-on="htmx:sseOpen: document.getElementById('sse-status').innerHTML='<span class=\'inline-block w-2 h-2 rounded-full bg-green-500 mr-2\'></span>Connected to event stream'"
-            ></div>
-            
-            <!-- Connection error -->
-            <div 
-                hx-on="htmx:sseError: document.getElementById('sse-status').innerHTML='<span class=\'inline-block w-2 h-2 rounded-full bg-red-500 mr-2\'></span>Error connecting to event stream'"
-            ></div>
         </div>
     </div>
 </body>
