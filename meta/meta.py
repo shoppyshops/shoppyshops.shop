@@ -75,3 +75,10 @@ class Meta(ServiceBase):
             raise ServiceClientError("Meta client not initialized")
         # TODO: Implement product insights retrieval
         return {}
+    
+    async def check_status(self) -> Dict[str, Any]:
+        """Check the service status"""
+        return {
+            'ok': False,
+            'message': 'Meta integration not implemented yet'
+        }

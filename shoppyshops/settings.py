@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_htmx',
     'livereload',
+    'corsheaders',
     'shopify',
     'shoppyshop',
     'ebay',
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -244,3 +246,36 @@ CHANNEL_LAYERS = {
         # },
     }
 }
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_CREDENTIALS = True
+CORS_EXPOSE_HEADERS = [
+    'Content-Type',
+    'Cache-Control',
+    'X-Accel-Buffering',
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'hx-current-url',
+    'hx-request',
+    'hx-target',
+    'hx-trigger',
+    'last-event-id',  # Important for SSE reconnection
+]
+
+# SSE settings
+SSE_RETRY_TIMEOUT = 2000  # milliseconds to wait before reconnecting
+SSE_MAX_CONNECTIONS = 100  # maximum number of concurrent SSE connections
+
+# Daphne settings for long-lived connections
+DAPHNE_WEBSOCKET_TIMEOUT = 86400  # 24 hours in seconds
+DAPHNE_HTTP_TIMEOUT = 86400  # 24 hours in seconds

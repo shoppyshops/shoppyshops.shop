@@ -9,6 +9,8 @@
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <!-- HTMX SSE extension for real-time events -->
     <script src="https://unpkg.com/htmx.org/dist/ext/sse.js"></script>
+    <!-- Hyperscript for animations -->
+    <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
     
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -125,13 +127,35 @@
     <!-- Toast notifications for webhook events -->
     <div
         id="notifications"
-        class="fixed bottom-4 right-4 space-y-2"
+        class="fixed bottom-4 right-4 space-y-2 z-50"
         hx-ext="sse"
         sse-connect="/shoppyshop/events/"
         sse-swap="beforeend"
         hx-swap="beforeend"
+        sse-subscribe="notification"
     >
-        <!-- Notifications will appear here -->
+        <!-- Connection status indicator -->
+        <div id="sse-status" class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
+            Connecting to event stream...
+        </div>
+
+        <!-- SSE status handlers -->
+        <div 
+            hx-ext="sse" 
+            sse-connect="/shoppyshop/events/"
+            sse-swap="none"
+        >
+            <!-- Connection established -->
+            <div 
+                hx-on="htmx:sseOpen: document.getElementById('sse-status').innerHTML='<span class=\'inline-block w-2 h-2 rounded-full bg-green-500 mr-2\'></span>Connected to event stream'"
+            ></div>
+            
+            <!-- Connection error -->
+            <div 
+                hx-on="htmx:sseError: document.getElementById('sse-status').innerHTML='<span class=\'inline-block w-2 h-2 rounded-full bg-red-500 mr-2\'></span>Error connecting to event stream'"
+            ></div>
+        </div>
     </div>
 </body>
 </html>

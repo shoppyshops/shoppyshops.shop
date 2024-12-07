@@ -20,6 +20,7 @@ uuid = "^1.30"
 django-environ = "^0.11.2"
 colorlog = "^6.9.0"
 channels = {extras = ["daphne"], version = "^4.2.0"}
+django-cors-headers = "^4.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"

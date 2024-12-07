@@ -71,3 +71,10 @@ class Ebay(ServiceBase):
             raise ServiceClientError("eBay client not initialized")
         # TODO: Implement order retrieval
         return []
+    
+    async def check_status(self) -> Dict[str, Any]:
+        """Check the service status"""
+        return {
+            'ok': False,
+            'message': 'eBay integration not implemented yet'
+        }

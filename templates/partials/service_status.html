@@ -13,5 +13,15 @@
         {% endfor %}
     </div>
 {% else %}
-    <p class="text-gray-500 dark:text-gray-400">Unable to fetch service status.</p>
+    <div class="text-gray-500 dark:text-gray-400">
+        <p>Unable to fetch service status.</p>
+        <button 
+            class="mt-2 px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
+            hx-get="/shoppyshop/services/status/"
+            hx-target="#services-status"
+            hx-indicator="#status-refresh-indicator"
+        >
+            Try Again
+        </button>
+    </div>
 {% endif %} 

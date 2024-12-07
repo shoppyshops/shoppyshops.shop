@@ -410,3 +410,47 @@ class Shopify(ServiceBase):
         except httpx.HTTPError as e:
             print(f"HTTP error in get_order: {str(e)}")
             raise ServiceClientError(f"Failed to fetch order: {str(e)}")
+    
+    async def check_status(self) -> Dict[str, Any]:
+        """Check the service status"""
+        if not self.client:
+            return {
+                'ok': False,
+                'message': 'Client not initialized'
+            }
+        
+        try:
+            # Use the shop query to check status
+            query = """
+            query {
+                shop {
+                    name
+                    id
+                }
+            }
+            """
+            
+            response = await self.client.post(
+                self.graphql_url,
+                json={'query': query}
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if 'errors' in data:
+                return {
+                    'ok': False,
+                    'message': f"API Error: {data['errors'][0]['message']}"
+                }
+            
+            shop_name = data['data']['shop']['name']
+            return {
+                'ok': True,
+                'message': f"Connected to {shop_name}"
+            }
+            
+        except Exception as e:
+            return {
+                'ok': False,
+                'message': str(e)
+            }

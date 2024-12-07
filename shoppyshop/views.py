@@ -8,6 +8,7 @@ import logging
 import asyncio
 from datetime import datetime
 from .shoppyshop import ShoppyShop, ServiceEvent
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -21,16 +22,6 @@ async def shopify_webhook(request):
     try:
         # Log webhook headers
         logger.info("Received Shopify webhook:")
-        
-        # Get ShoppyShop instance and initialize services
-        shop = await ShoppyShop.get_instance()
-        
-        # Initialize services if needed
-        try:
-            await shop.initialize_services()
-        except Exception as e:
-            logger.error(f"Failed to initialize services: {e}")
-            return HttpResponse(status=503)  # Service Unavailable
         
         # Get headers, supporting both direct and Django test client formats
         hmac = (request.headers.get('X-Shopify-Hmac-Sha256') or 
@@ -52,6 +43,16 @@ async def shopify_webhook(request):
         if topic != 'orders/create':
             logger.info(f"Ignoring non-order webhook: {topic}")
             return HttpResponse(status=200)
+            
+        # Get ShoppyShop instance and initialize services
+        shop = await ShoppyShop.get_instance()
+        
+        # Initialize services if needed
+        try:
+            await shop.initialize_services()
+        except Exception as e:
+            logger.error(f"Failed to initialize services: {e}")
+            return HttpResponse(status=503)  # Service Unavailable
             
         try:
             data = json.loads(request.body)
@@ -154,20 +155,26 @@ async def service_status(request):
 async def event_stream(request):
     """SSE endpoint for real-time updates"""
     shop = await ShoppyShop.get_instance()
-    connection_id = id(request)  # Unique identifier for this connection
+    connection_id = id(request)
+    logger.info(f"SSE connection established: {connection_id}")
     
     async def event_generator():
         queue = asyncio.Queue()
         handlers = []
         handler_count = 0
         
+        # Send initial retry timeout
+        yield f"retry: {settings.SSE_RETRY_TIMEOUT}\n\n"
+        
         # Event handler that puts events into the queue
         async def handle_event(event_data):
+            logger.info(f"Handling event for connection {connection_id}: {event_data}")
             notification_html = render_to_string('partials/notification.html', {
                 'type': event_data.get('type', 'info'),
                 'message': event_data.get('message', 'Update received'),
                 'timestamp': datetime.now()
             })
+            logger.info(f"Rendered notification for {connection_id}: {notification_html[:100]}...")
             
             await queue.put({
                 'event': 'notification',
@@ -179,8 +186,8 @@ async def event_stream(request):
             nonlocal handler_count
             
             async def event_handler(data):
+                logger.info(f"Event handler {name} called for {connection_id}")
                 await handle_event(message_func(data))
-            # Set a descriptive name for the handler
             event_handler.__name__ = f"notify_{name}_{connection_id}"
             
             shop.on(event, event_handler)
@@ -215,16 +222,21 @@ async def event_stream(request):
             'error'
         )
         
-        # Log registration once for all handlers
-        if handler_count > 0:
-            logger.debug(f"Registered {handler_count} notification handlers for connection {connection_id}")
+        logger.info(f"Registered {handler_count} notification handlers for connection {connection_id}")
         
         try:
+            logger.info(f"Starting event stream for {connection_id}")
+            # Send initial connection event
+            yield "event: open\ndata: {}\n\n"
+            
             while True:
                 event = await queue.get()
-                yield f"event: {event['event']}\ndata: {event['data']}\n\n"
+                logger.info(f"Got event for {connection_id}: {event}")
+                yield f"event: {event['event']}\ndata: {json.dumps(event['data'])}\n\n"
         except Exception as e:
-            logger.error(f"Error in event stream: {e}")
+            logger.error(f"Error in event stream for {connection_id}: {e}")
+            # Send error event
+            yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
         finally:
             # Clean up event handlers
             removed_count = 0
@@ -232,10 +244,21 @@ async def event_stream(request):
                 if handler in shop.event_handlers[event]:
                     shop.event_handlers[event].remove(handler)
                     removed_count += 1
-            if removed_count > 0:
-                logger.debug(f"Cleaned up {removed_count} notification handlers for connection {connection_id}")
+            logger.info(f"Cleaned up {removed_count} handlers for connection {connection_id}")
 
-    return StreamingHttpResponse(
+    response = StreamingHttpResponse(
         event_generator(),
         content_type='text/event-stream'
     )
+    
+    # Add SSE-specific headers
+    response['Cache-Control'] = 'no-cache'
+    response['Connection'] = 'keep-alive'
+    response['X-Accel-Buffering'] = 'no'
+    
+    # Add CORS headers if needed (in case django-cors-headers doesn't catch this response)
+    if 'HTTP_ORIGIN' in request.META:
+        response['Access-Control-Allow-Origin'] = request.META['HTTP_ORIGIN']
+        response['Access-Control-Allow-Credentials'] = 'true'
+    
+    return response
