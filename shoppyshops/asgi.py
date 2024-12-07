@@ -4,7 +4,7 @@ ASGI config for shoppyshops project.
 
 import os
 from django.core.asgi import get_asgi_application
-from django.conf import settings
+from channels.routing import ProtocolTypeRouter
 import logging
 from contextlib import asynccontextmanager
 from shoppyshop.shoppyshop import ShoppyShop
@@ -13,21 +13,33 @@ logger = logging.getLogger(__name__)
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'shoppyshops.settings')
 
+# Initialize this at module level to ensure single instance
+_shop_instance = None
+
 @asynccontextmanager
 async def lifespan(scope, receive, send):
     """
     Lifecycle manager for the ASGI application.
     Handles startup and shutdown of the ShoppyShop instance.
     """
+    global _shop_instance
     try:
-        # Initialize ShoppyShop on startup
-        shop = await ShoppyShop.get_instance()
-        logger.info("ShoppyShop initialized successfully")
+        # Initialize ShoppyShop on startup only if not already initialized
+        if _shop_instance is None:
+            _shop_instance = await ShoppyShop.get_instance()
+            logger.info("ShoppyShop initialized successfully")
         yield
     finally:
         # Shutdown ShoppyShop on application termination
-        await shop.shutdown()
-        logger.info("ShoppyShop shutdown complete")
+        if _shop_instance is not None:
+            await _shop_instance.shutdown()
+            _shop_instance = None
+            logger.info("ShoppyShop shutdown complete")
+
+# Create the base application with protocol routing
+django_application = ProtocolTypeRouter({
+    "http": get_asgi_application(),
+})
 
 async def application(scope, receive, send):
     """
@@ -42,5 +54,4 @@ async def application(scope, receive, send):
             if message["type"] == "lifespan.shutdown":
                 await send({"type": "lifespan.shutdown.complete"})
     else:
-        django_app = get_asgi_application()
-        await django_app(scope, receive, send)
+        await django_application(scope, receive, send)

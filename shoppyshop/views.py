@@ -21,8 +21,8 @@ async def shopify_webhook(request):
     try:
         # Log webhook headers
         logger.info("Received Shopify webhook:")
-        logger.info(f"Headers: {dict(request.headers)}")
-        logger.info(f"META: {dict(request.META)}")
+        # logger.info(f"Headers: {dict(request.headers)}")
+        # logger.info(f"META: {dict(request.META)}")
         
         # Get ShoppyShop instance and initialize services
         shop = await ShoppyShop.get_instance()
