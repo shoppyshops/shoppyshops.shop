@@ -165,14 +165,31 @@ class Shopify(ServiceBase):
         # TODO: Implement inventory update
         return True
     
-    async def get_orders(self, status: Optional[str] = None) -> List[ShopifyOrder]:
-        """Get orders with optional status filter using GraphQL"""
+    async def get_orders(
+        self, 
+        status: Optional[str] = None, 
+        limit: int = 10,
+        sort_key: str = "CREATED_AT",
+        reverse: bool = False
+    ) -> List[ShopifyOrder]:
+        """
+        Get orders with flexible filtering and sorting
+        
+        Args:
+            status: Optional status filter
+            limit: Number of orders to fetch (default: 10)
+            sort_key: Field to sort by (default: CREATED_AT)
+            reverse: Sort in reverse order (default: False)
+        
+        Returns:
+            List of orders matching criteria
+        """
         if not self.client:
             raise ServiceClientError("Shopify client not initialized")
         
         query = """
-        query getOrders($first: Int!, $query: String) {
-          orders(first: $first, query: $query) {
+        query getOrders($first: Int!, $query: String, $sortKey: OrderSortKeys!, $reverse: Boolean!) {
+          orders(first: $first, query: $query, sortKey: $sortKey, reverse: $reverse) {
             edges {
               node {
                 id
@@ -181,6 +198,7 @@ class Shopify(ServiceBase):
                 phone
                 displayFulfillmentStatus
                 displayFinancialStatus
+                createdAt
                 totalPriceSet {
                   shopMoney {
                     amount
@@ -203,8 +221,10 @@ class Shopify(ServiceBase):
         """
         
         variables = {
-            'first': 10,
-            'query': f"status:{status}" if status else None
+            'first': limit,
+            'query': f"status:{status}" if status else None,
+            'sortKey': sort_key,
+            'reverse': reverse
         }
         
         try:
@@ -228,20 +248,15 @@ class Shopify(ServiceBase):
                 node = edge['node']
                 orders.append({
                     'id': node['id'],
-                    'orderNumber': node['name'].replace('#', ''),  # Extract number from name field
+                    'orderNumber': node['name'].replace('#', ''),
                     'email': node['email'],
                     'phone': node['phone'],
                     'fulfillmentStatus': node['displayFulfillmentStatus'],
                     'financialStatus': node['displayFinancialStatus'],
-                    'total': float(node['totalPriceSet']['shopMoney']['amount']),
-                    'items': [
-                        {
-                            'id': item['node']['id'],
-                            'name': item['node']['name'],
-                            'quantity': item['node']['quantity']
-                        }
-                        for item in node['lineItems']['edges']
-                    ]
+                    'createdAt': node['createdAt'],
+                    'totalPrice': node['totalPriceSet']['shopMoney']['amount'],
+                    'currencyCode': node['totalPriceSet']['shopMoney']['currencyCode'],
+                    'lineItems': [item['node'] for item in node['lineItems']['edges']]
                 })
             
             return orders
@@ -385,3 +400,86 @@ class Shopify(ServiceBase):
         except httpx.HTTPError as e:
             print(f"HTTP error in get_order: {str(e)}")
             raise ServiceClientError(f"Failed to fetch order: {str(e)}")
+    
+    async def get_latest_order(self) -> Optional[Dict[str, Any]]:
+        """
+        Fetch the most recent order from Shopify
+        
+        Returns:
+            The latest order or None if no orders exist
+        """
+        if not self.client:
+            raise ServiceClientError("Shopify client not initialized")
+        
+        query = """
+        query getLatestOrder {
+          orders(first: 1, sortKey: CREATED_AT, reverse: true) {
+            edges {
+              node {
+                id
+                name
+                email
+                phone
+                displayFulfillmentStatus
+                displayFinancialStatus
+                createdAt
+                totalPriceSet {
+                  shopMoney {
+                    amount
+                    currencyCode
+                  }
+                }
+                lineItems(first: 10) {
+                  edges {
+                    node {
+                      id
+                      name
+                      quantity
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """
+        
+        try:
+            response = await self.client.post(
+                self.graphql_url,
+                json={'query': query}
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if 'errors' in data:
+                print(f"GraphQL errors in get_latest_order: {data['errors']}")
+                raise ServiceClientError(f"GraphQL Error: {data['errors']}")
+            
+            orders = data['data']['orders']['edges']
+            if not orders:
+                return None
+            
+            node = orders[0]['node']
+            return {
+                'id': node['id'],
+                'orderNumber': node['name'].replace('#', ''),
+                'email': node['email'],
+                'phone': node['phone'],
+                'fulfillmentStatus': node['displayFulfillmentStatus'],
+                'financialStatus': node['displayFinancialStatus'],
+                'createdAt': node['createdAt'],
+                'total': float(node['totalPriceSet']['shopMoney']['amount']),
+                'items': [
+                    {
+                        'id': item['node']['id'],
+                        'name': item['node']['name'],
+                        'quantity': item['node']['quantity']
+                    }
+                    for item in node['lineItems']['edges']
+                ]
+            }
+            
+        except httpx.HTTPError as e:
+            print(f"HTTP error in get_latest_order: {str(e)}")
+            raise ServiceClientError(f"Failed to fetch latest order: {str(e)}")

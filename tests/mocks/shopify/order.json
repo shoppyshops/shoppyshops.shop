@@ -7,6 +7,7 @@
     "phone": "+61412345678",
     "fulfillmentStatus": "UNFULFILLED",
     "financialStatus": "PAID",
+    "createdAt": "2024-03-14T12:00:00Z",
     "totalPriceSet": {
       "shopMoney": {
         "amount": "159.99",

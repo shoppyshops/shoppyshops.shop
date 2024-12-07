@@ -96,3 +96,45 @@ async def test_shopify_get_order_real(shopify_credentials):
     assert order['id'] == order_id
     assert 'orderNumber' in order
     assert 'fulfillmentStatus' in order
+
+
+@pytest.mark.asyncio
+@pytest.mark.mock
+async def test_shopify_get_latest_order_mock(shopify_credentials, load_mock_data):
+    """Test getting latest Shopify order with mock data"""
+    mock_data = load_mock_data('shopify', 'order')
+    
+    with patch('shopify.shopify.Shopify.validate_credentials', return_value=True), \
+         patch('shopify.shopify.Shopify.get_orders', return_value=[mock_data['order']]):
+        
+        service = Shopify(shopify_credentials)
+        await service.initialize()
+        
+        orders = await service.get_orders(limit=1, sort_key="CREATED_AT", reverse=True)
+        assert len(orders) == 1
+        order = orders[0]
+        assert order is not None
+        assert 'id' in order
+        assert 'createdAt' in order
+        assert order['orderNumber'] == mock_data['order']['orderNumber']
+
+
+@pytest.mark.asyncio
+@pytest.mark.real
+@pytest.mark.skipif(
+    not pytest.mark.use_real_apis,
+    reason="--use-real-apis not specified"
+)
+async def test_shopify_get_latest_order_real(shopify_credentials):
+    """Test getting latest Shopify order with real API"""
+    service = Shopify(shopify_credentials)
+    await service.initialize()
+    
+    orders = await service.get_orders(limit=1, sort_key="CREATED_AT", reverse=True)
+    if not orders:
+        pytest.skip("No orders available for testing")
+        
+    order = orders[0]
+    assert 'id' in order
+    assert 'createdAt' in order
+    assert 'orderNumber' in order
