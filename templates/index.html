@@ -129,45 +129,60 @@
         </main>
     </div>
 
-    <!-- Toast notifications for webhook events -->
+    <!-- Toast notifications -->
     <div
-        id="notifications"
+        id="notifications-container"
         class="fixed bottom-4 right-4 space-y-2 z-50"
         hx-ext="sse"
         sse-connect="/shoppyshop/events/"
-        sse-swap="beforeend"
-        hx-swap="beforeend"
-        sse-subscribe="notification"
     >
         <!-- Connection status indicator -->
         <div 
             id="sse-status" 
             class="text-sm text-gray-500 dark:text-gray-400 mb-2"
-            hx-ext="sse"
-            sse-connect="/shoppyshop/events/"
+            sse-swap="innerHTML"
         >
             <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
-            Connecting to event stream...
+            <span>Connecting...</span>
         </div>
+
+        <!-- Notifications will be added here -->
+        <div 
+            id="notifications"
+            sse-swap="beforeend"
+        ></div>
     </div>
 
     <!-- Event handlers -->
     <script>
+        // Log all HTMX events
+        htmx.logger = function(elt, event, data) {
+            if(console) {
+                console.log('HTMX Event:', event, 'Data:', data);
+            }
+        }
+
         htmx.on('htmx:sseOpen', function(evt) {
+            console.log('SSE Connection Opened');
             document.getElementById('sse-status').innerHTML = 
                 '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>' +
-                'Connected to event stream';
+                '<span>Connected</span>';
         });
 
         htmx.on('htmx:sseError', function(evt) {
+            console.log('SSE Connection Error:', evt);
             document.getElementById('sse-status').innerHTML = 
                 '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>' +
-                'Error connecting to event stream';
+                '<span>Connection Error</span>';
         });
 
-        // Debug logging
+        // Debug logging for all SSE events
         htmx.on('htmx:sseMessage', function(evt) {
-            console.log('SSE Message:', evt.detail);
+            console.log('SSE Message Received:', {
+                event: evt.detail.event,
+                data: evt.detail.data,
+                raw: evt
+            });
         });
     </script>
 </body>
