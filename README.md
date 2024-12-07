@@ -30,20 +30,19 @@ A Django-based e-commerce platform with AI integration and real-time streaming c
 4. Run development servers
    ```bash
    # Terminal 1: Django development server
-   poetry run python manage.py runserver
+   ./manage.py runserver
 
    # Terminal 2: Live reload
-   poetry run python manage.py livereload
+   ./manage.py livereload
 
    # Terminal 3: Pytest watch
-   poetry run ptw -- -vv
+   ptw -- -vv
    ```
 
 ## Development Setup
 - Python 3.11+
 - Poetry for dependency management
 - Django 5.0+
-- Node.js (for build tools)
 - OpenAI API key
 
 ## Dependencies Management
@@ -61,11 +60,14 @@ This project uses AI-assisted development with Cursor editor:
 ## Project Structure
 ```
 shoppyshops.shop/
-├── apps/               # Django applications
-├── static/             # Static files
-├── templates/          # HTML templates
-├── tests/              # Test suite
-└── config/             # Project settings
+├── shoppyshops/        # Django project settings
+├── shoppyshop/         # Main service integration app
+├── shopify/            # Shopify integration
+├── ebay/              # eBay integration
+├── meta/              # Meta integration (read-only)
+├── static/            # Static files
+├── templates/         # HTML templates
+└── tests/             # Test suite
 ```
 
 ## Contributing
