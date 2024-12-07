@@ -92,6 +92,8 @@ async def orders_list(request):
     """HTMX endpoint for fetching recent orders"""
     shop = await ShoppyShop.get_instance()
     try:
+        start_time = datetime.now()
+        
         # Ensure services are initialized
         await shop.initialize_services()
         
@@ -101,8 +103,29 @@ async def orders_list(request):
             sort_key="CREATED_AT",
             reverse=True
         )
-        order_numbers = [order.get('orderNumber', 'N/A') for order in orders]
-        logger.info(f"Fetched {len(orders)} orders: {order_numbers}")
+        
+        # Calculate timing
+        fetch_time = (datetime.now() - start_time).total_seconds()
+        
+        # Extract order details
+        order_details = [
+            {
+                'number': order.get('orderNumber', 'N/A'),
+                'status': order.get('fulfillmentStatus', 'unknown')
+            }
+            for order in orders
+        ]
+        
+        # Format order details with proper quote escaping
+        order_summaries = [
+            f"{details['number']}({details['status']})"
+            for details in order_details
+        ]
+        
+        logger.info(
+            f"Fetched {len(orders)} orders in {fetch_time:.2f}s: {order_summaries}"
+        )
+        
         return render(request, 'partials/orders_list.html', {'orders': orders})
     except Exception as e:
         logger.error(f"Error fetching orders: {e}")
@@ -131,13 +154,15 @@ async def service_status(request):
 async def event_stream(request):
     """SSE endpoint for real-time updates"""
     shop = await ShoppyShop.get_instance()
+    connection_id = id(request)  # Unique identifier for this connection
     
     async def event_generator():
         queue = asyncio.Queue()
+        handlers = []
+        handler_count = 0
         
         # Event handler that puts events into the queue
         async def handle_event(event_data):
-            # Render the notification template
             notification_html = render_to_string('partials/notification.html', {
                 'type': event_data.get('type', 'info'),
                 'message': event_data.get('message', 'Update received'),
@@ -150,20 +175,26 @@ async def event_stream(request):
             })
         
         # Register handlers for events we want to stream
-        handlers = []
-        
-        def register_handler(event, message_func):
-            async def handler(data):
+        def register_handler(event: ServiceEvent, message_func, name: str):
+            nonlocal handler_count
+            
+            async def event_handler(data):
                 await handle_event(message_func(data))
-            shop.on(event, handler)
-            handlers.append((event, handler))
+            # Set a descriptive name for the handler
+            event_handler.__name__ = f"notify_{name}_{connection_id}"
+            
+            shop.on(event, event_handler)
+            handlers.append((event, event_handler))
+            handler_count += 1
         
+        # Register all handlers first
         register_handler(
             ServiceEvent.ORDER_CREATED,
             lambda data: {
                 'type': 'success',
                 'message': f"New order received: #{data.get('order_id')}"
-            }
+            },
+            'order_created'
         )
         
         register_handler(
@@ -171,7 +202,8 @@ async def event_stream(request):
             lambda data: {
                 'type': 'success',
                 'message': f"Order #{data.get('order_id')} has been updated"
-            }
+            },
+            'order_updated'
         )
         
         register_handler(
@@ -179,8 +211,13 @@ async def event_stream(request):
             lambda data: {
                 'type': 'error',
                 'message': f"Error: {data.get('error')}"
-            }
+            },
+            'error'
         )
+        
+        # Log registration once for all handlers
+        if handler_count > 0:
+            logger.debug(f"Registered {handler_count} notification handlers for connection {connection_id}")
         
         try:
             while True:
@@ -190,10 +227,13 @@ async def event_stream(request):
             logger.error(f"Error in event stream: {e}")
         finally:
             # Clean up event handlers
+            removed_count = 0
             for event, handler in handlers:
                 if handler in shop.event_handlers[event]:
                     shop.event_handlers[event].remove(handler)
-            logger.debug("Event handlers cleaned up")
+                    removed_count += 1
+            if removed_count > 0:
+                logger.debug(f"Cleaned up {removed_count} notification handlers for connection {connection_id}")
 
     return StreamingHttpResponse(
         event_generator(),

@@ -217,12 +217,27 @@ class ShoppyShop:
         """Register an event handler if not already registered"""
         if handler not in self.event_handlers[event]:
             self.event_handlers[event].append(handler)
-            self.logger.debug(f"Registered handler for event: {event.value}")
+            if self.logger.isEnabledFor(logging.DEBUG):
+                handler_name = getattr(handler, '__name__', str(handler))
+                handler_type = 'async' if asyncio.iscoroutinefunction(handler) else 'sync'
+                self.logger.debug(
+                    f"Registered {handler_type} handler '{handler_name}' "
+                    f"for event: {event.value}"
+                )
 
     async def emit(self, event: ServiceEvent, data: Any = None) -> None:
         """Emit an event to all registered handlers"""
         handlers = self.event_handlers[event]
-        self.logger.debug(f"Emitting event {event.value} to {len(handlers)} handlers")
+        start_time = datetime.now()
+        success_count = 0
+        error_count = 0
+        
+        if self.logger.isEnabledFor(logging.DEBUG):
+            handler_names = [getattr(h, '__name__', str(h)) for h in handlers]
+            self.logger.debug(
+                f"Emitting {event.value} to {len(handlers)} handlers: "
+                f"{', '.join(handler_names)}"
+            )
         
         for handler in handlers:
             try:
@@ -230,13 +245,26 @@ class ShoppyShop:
                     await handler(data)
                 else:
                     handler(data)
+                success_count += 1
             except Exception as e:
-                self.logger.error(f"Error in event handler for {event.value}: {str(e)}")
+                error_count += 1
+                handler_name = getattr(handler, '__name__', str(handler))
+                self.logger.error(
+                    f"Error in handler '{handler_name}' for {event.value}: {str(e)}"
+                )
                 await self.emit(ServiceEvent.ERROR, {
                     "event": event,
                     "error": str(e),
-                    "handler": handler.__name__
+                    "handler": handler_name
                 })
+        
+        # Log summary if there were any handlers
+        if handlers:
+            process_time = (datetime.now() - start_time).total_seconds()
+            self.logger.debug(
+                f"Event {event.value} processed by {success_count}/{len(handlers)} handlers "
+                f"in {process_time:.3f}s ({error_count} errors)"
+            )
 
     async def _handle_order_created(self, data: Dict[str, Any]) -> None:
         """
