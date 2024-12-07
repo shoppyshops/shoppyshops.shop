@@ -82,18 +82,7 @@ class Meta:
 
 ## Django Apps and Models
 
-### 1. ShoppyShop (`shoppyshop/models.py`)
-```python
-# models.py
-class ServiceToken(models.Model):
-    """Service authentication tokens"""
-    service = models.CharField(max_length=50)  # 'shopify', 'ebay', 'meta'
-    token = models.CharField(max_length=255)
-    is_active = models.BooleanField(default=True)
-    last_used = models.DateTimeField(auto_now=True)
-```
-
-### 2. Shopify (`shopify/models.py`)
+### 1. Shopify (`shopify/models.py`)
 ```python
 # models.py
 class ShopifyProduct(models.Model):
@@ -116,7 +105,7 @@ class ShopifyOrder(models.Model):
     created_at = models.DateTimeField()
 ```
 
-### 3. eBay (`ebay/models.py`)
+### 2. eBay (`ebay/models.py`)
 ```python
 # models.py
 class EbayListing(models.Model):
@@ -140,7 +129,7 @@ class EbayOrder(models.Model):
     created_at = models.DateTimeField()
 ```
 
-### 4. Meta (`meta/models.py`)
+### 3. Meta (`meta/models.py`)
 ```python
 # models.py
 class MetaCampaignInsight(models.Model):
