@@ -78,32 +78,71 @@ shoppyshops.shop/
 
 There are several ways to run tests:
 
-1. Run tests once:
-   ```bash
-   pytest  # Uses mocks by default
-   pytest -m real  # Uses real API calls
-   ```
+### 1. Watch Mode (Recommended)
+```bash
+# Watch mock tests (default)
+ptw . "-m mock" --now
 
-2. Watch mode (automatically run tests when files change):
-   ```bash
-   ptw .                  # Interactive mode with mocks
-   ptw . --now            # Run immediately with mocks
-   ptw . "-m real" --now  # Run real API tests immediately
-   ```
+# Watch real API tests
+ptw . "-m real" --now
 
-   The last command breaks down as:
-   - `ptw .` - Watch current directory
-   - `"-m real"` - Only run tests marked with @pytest.mark.real
-   - `--now` - Run tests immediately
+# Watch specific test file
+ptw tests/test_webhooks.py --now
 
-3. Watch mode with coverage reporting:
-   ```bash
-   pytest --cov=shoppyshops --cov-report=term-missing
-   ```
+# Watch specific test
+ptw "tests/test_webhooks.py::test_shopify_webhook_order_created" --now
+```
 
-4. Generate HTML coverage report:
-   ```bash
-   pytest --cov=shoppyshops --cov-report=html
-   ```
+The commands break down as:
+- `ptw .` - Watch current directory
+- `"-m real"` - Only run tests marked with @pytest.mark.real
+- `--now` - Run tests immediately instead of waiting for changes
 
-Note: The `--use-real-api` flag will make real API calls to external services. Make sure you have the necessary API keys configured in your `.env` file before using this flag.
+### 2. Single Run
+```bash
+# Run mock tests
+pytest -m mock
+
+# Run real API tests
+pytest -m real
+
+# Run specific test
+pytest tests/test_webhooks.py::test_shopify_webhook_order_created
+```
+
+### 3. Coverage Reports
+```bash
+# Terminal coverage report
+pytest --cov=shoppyshops --cov-report=term-missing
+
+# HTML coverage report
+pytest --cov=shoppyshops --cov-report=html
+```
+
+### 4. Development Workflow
+For development, run these in separate terminals:
+```bash
+# Terminal 1: Watch mock tests
+ptw . "-m mock" --now
+
+# Terminal 2: Watch real API tests
+ptw . "-m real" --now
+
+# Terminal 3: Django development server
+./manage.py runserver
+
+# Terminal 4: Live reload
+./manage.py livereload
+```
+
+### 5. Test Environment
+- Tests use mock data by default for speed and reliability
+- Use `-m real` to run tests against real services
+- Mock data is stored in `tests/mocks/`
+- Environment variables are loaded from `.env`
+
+### 6. Writing Tests
+- Place tests in `tests/` directory
+- Use appropriate markers (`@pytest.mark.mock`, `@pytest.mark.real`, etc.)
+- Mock external services by default, use `-m real` for real API calls
+- Follow existing patterns for consistency

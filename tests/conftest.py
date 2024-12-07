@@ -6,6 +6,7 @@ from typing import Dict, Any
 import pytest
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
+from django.test import AsyncClient
 
 
 def pytest_addoption(parser: Parser) -> None:
@@ -82,4 +83,10 @@ def meta_credentials() -> Dict[str, str]:
         'app_secret': os.getenv('META_APP_SECRET', ''),
         'access_token': os.getenv('META_ACCESS_TOKEN', ''),
         'environment': os.getenv('META_ENV', 'sandbox')
-    } 
+    }
+
+
+@pytest.fixture
+async def client():
+    """Async client fixture for testing async views"""
+    return AsyncClient() 
