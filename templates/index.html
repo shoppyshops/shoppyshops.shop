@@ -110,8 +110,6 @@
             </section>
         </main>
     </div>
-
-    <!-- Toast notifications -->
     <div
         id="notifications-container"
         class="fixed bottom-4 right-4 space-y-2 z-50"
@@ -131,7 +129,6 @@
             sse-swap="innerHTML"
         >
             <span class="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-2"></span>
-            <span>Connecting...</span>
         </div>
 
     </div>
@@ -148,15 +145,13 @@
         htmx.on('htmx:sseOpen', function(evt) {
             console.log('SSE Connection Opened');
             document.getElementById('sse-status').innerHTML = 
-                '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>' +
-                '<span>Connected</span>';
+                '<span class="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>'
         });
 
         htmx.on('htmx:sseError', function(evt) {
             console.log('SSE Connection Error:', evt);
             document.getElementById('sse-status').innerHTML = 
-                '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>' +
-                '<span>Connection Error</span>';
+                '<span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-2"></span>'
         });
 
         // Debug logging for all SSE events
