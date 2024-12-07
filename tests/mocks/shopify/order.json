@@ -1,0 +1,64 @@
+{
+  "order": {
+    "id": "gid://shopify/Order/123456789",
+    "name": "#1001",
+    "orderNumber": "1001",
+    "email": "customer@example.com",
+    "phone": "+61412345678",
+    "fulfillmentStatus": "UNFULFILLED",
+    "financialStatus": "PAID",
+    "totalPriceSet": {
+      "shopMoney": {
+        "amount": "159.99",
+        "currencyCode": "AUD"
+      }
+    },
+    "subtotalPriceSet": {
+      "shopMoney": {
+        "amount": "149.99",
+        "currencyCode": "AUD"
+      }
+    },
+    "totalShippingPriceSet": {
+      "shopMoney": {
+        "amount": "10.00",
+        "currencyCode": "AUD"
+      }
+    },
+    "totalTaxSet": {
+      "shopMoney": {
+        "amount": "15.99",
+        "currencyCode": "AUD"
+      }
+    },
+    "lineItems": {
+      "edges": [
+        {
+          "node": {
+            "id": "gid://shopify/LineItem/987654321",
+            "name": "Test Product",
+            "quantity": 1,
+            "originalUnitPrice": "149.99",
+            "discountedUnitPrice": "149.99",
+            "variant": {
+              "id": "gid://shopify/ProductVariant/12345",
+              "sku": "TEST-SKU-001",
+              "inventoryQuantity": 10
+            }
+          }
+        }
+      ]
+    },
+    "shippingAddress": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "address1": "123 Test Street",
+      "address2": "Unit 4",
+      "city": "Sydney",
+      "province": "NSW",
+      "country": "Australia",
+      "zip": "2000",
+      "phone": "+61412345678"
+    }
+  }
+} 

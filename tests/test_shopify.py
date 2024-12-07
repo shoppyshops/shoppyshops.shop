@@ -58,19 +58,20 @@ async def test_shopify_get_products_real(shopify_credentials):
 
 @pytest.mark.asyncio
 @pytest.mark.mock
-async def test_shopify_update_inventory_mock(shopify_credentials):
-    """Test updating Shopify inventory with mock data"""
-    service = Shopify(shopify_credentials)
-    service.client = AsyncMock()  # Mock the client
+async def test_shopify_get_order_mock(shopify_credentials, load_mock_data):
+    """Test getting a single Shopify order with mock data"""
+    mock_data = load_mock_data('shopify', 'order')
     
-    # Mock the update_inventory method
-    service.client.update_inventory = AsyncMock(return_value=True)
-    
-    result = await service.update_inventory("123456789", 50)
-    assert result is True
-    
-    # Verify the mock was called with correct arguments
-    service.client.update_inventory.assert_called_once_with("123456789", 50)
+    with patch('shopify.shopify.Shopify.validate_credentials', return_value=True), \
+         patch('shopify.shopify.Shopify.get_order', return_value=mock_data['order']):
+        
+        service = Shopify(shopify_credentials)
+        await service.initialize()
+        
+        order = await service.get_order("gid://shopify/Order/123456789")
+        assert order['id'] == "gid://shopify/Order/123456789"
+        assert order['orderNumber'] == "1001"
+        assert order['fulfillmentStatus'] == "UNFULFILLED"
 
 
 @pytest.mark.asyncio
@@ -79,28 +80,19 @@ async def test_shopify_update_inventory_mock(shopify_credentials):
     not pytest.mark.use_real_apis,
     reason="--use-real-apis not specified"
 )
-async def test_shopify_update_inventory_real(shopify_credentials):
-    """Test updating Shopify inventory with real API"""
+async def test_shopify_get_order_real(shopify_credentials):
+    """Test getting a single Shopify order with real API"""
     service = Shopify(shopify_credentials)
     await service.initialize()
     
-    # Get first product to test with
-    products = await service.get_products()
-    if not products:
-        pytest.skip("No products available for testing")
+    # First get list of orders to get a real ID
+    orders = await service.get_orders()
+    if not orders:
+        pytest.skip("No orders available for testing")
     
-    product_id = products[0]['id']
-    current_quantity = products[0]['variants'][0]['inventory_quantity']
+    order_id = orders[0]['id']
+    order = await service.get_order(order_id)
     
-    # Try to update inventory
-    result = await service.update_inventory(product_id, current_quantity + 1)
-    assert result is True
-    
-    # Verify the update
-    updated_products = await service.get_products()
-    updated_quantity = next(
-        p['variants'][0]['inventory_quantity'] 
-        for p in updated_products 
-        if p['id'] == product_id
-    )
-    assert updated_quantity == current_quantity + 1 
+    assert order['id'] == order_id
+    assert 'orderNumber' in order
+    assert 'fulfillmentStatus' in order

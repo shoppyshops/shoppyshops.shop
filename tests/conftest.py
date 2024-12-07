@@ -49,11 +49,15 @@ def load_mock_data():
 @pytest.fixture
 def shopify_credentials() -> Dict[str, str]:
     """Get Shopify credentials from environment"""
+    shop_url = os.getenv('SHOPIFY_URL', '')
+    if not shop_url.endswith('myshopify.com'):
+        shop_url = f"{shop_url}.myshopify.com"
+        
     return {
         'api_key': os.getenv('SHOPIFY_API_KEY', ''),
         'api_secret': os.getenv('SHOPIFY_API_SECRET', ''),
-        'access_token': os.getenv('SHOPIFY_ACCESS_TOKEN', ''),
-        'shop_url': os.getenv('SHOPIFY_URL', ''),
+        'access_token': os.getenv('SHOPIFY_API_ACCESS_TOKEN', ''),
+        'shop_url': shop_url,
         'api_version': os.getenv('SHOPIFY_API_VERSION', '2024-01')
     }
 
