@@ -87,6 +87,6 @@ def meta_credentials() -> Dict[str, str]:
 
 
 @pytest.fixture
-async def client():
-    """Async client fixture for testing async views"""
+def client():
+    """Client fixture for testing views"""
     return AsyncClient() 

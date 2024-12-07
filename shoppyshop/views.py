@@ -22,6 +22,7 @@ async def shopify_webhook(request):
         # Log webhook headers
         logger.info("Received Shopify webhook:")
         logger.info(f"Headers: {dict(request.headers)}")
+        logger.info(f"META: {dict(request.META)}")
         
         # Get ShoppyShop instance and initialize services
         shop = await ShoppyShop.get_instance()
@@ -33,15 +34,21 @@ async def shopify_webhook(request):
             logger.error(f"Failed to initialize services: {e}")
             return HttpResponse(status=503)  # Service Unavailable
         
-        # Verify Shopify webhook
-        hmac = request.headers.get('X-Shopify-Hmac-Sha256')
-        topic = request.headers.get('X-Shopify-Topic')
+        # Get headers, supporting both direct and Django test client formats
+        hmac = (request.headers.get('X-Shopify-Hmac-Sha256') or 
+                request.META.get('HTTP_X_SHOPIFY_HMAC_SHA256') or
+                request.META.get('HTTP_HTTP_X_SHOPIFY_HMAC_SHA256'))
+        topic = (request.headers.get('X-Shopify-Topic') or 
+                request.META.get('HTTP_X_SHOPIFY_TOPIC') or
+                request.META.get('HTTP_HTTP_X_SHOPIFY_TOPIC'))
         
-        logger.info(f"Webhook topic: {topic}")
-        logger.info(f"HMAC: {hmac}")
+        logger.info(f"Extracted hmac: {hmac}")
+        logger.info(f"Extracted topic: {topic}")
         
         if not hmac or not topic:
             logger.error("Missing required Shopify webhook headers")
+            logger.error(f"Available headers: {list(request.headers.keys())}")
+            logger.error(f"Available META: {[k for k in request.META.keys() if k.startswith('HTTP_')]}")
             return HttpResponse(status=401)
             
         if topic != 'orders/create':
