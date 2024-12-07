@@ -1,24 +1,7 @@
 <div 
-    class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border-l-4 {% if type == 'error' %}border-red-500{% else %}border-green-500{% endif %} min-w-[300px] transition-opacity duration-500"
-    hx-swap-oob="afterbegin:#notifications-container"
-    hx-trigger="load delay:5s"
-    hx-swap="delete transition:opacity"
+    class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 mb-4 border-l-4 {% if type == 'error' %}border-red-500{% else %}border-green-500{% endif %}"
+    hx-swap-oob="beforeend:#notifications-container"
 >
-    <div class="flex items-center">
-        {% if type == 'error' %}
-            <svg class="w-6 h-6 text-red-500 dark:text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-        {% else %}
-            <svg class="w-6 h-6 text-green-500 dark:text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-        {% endif %}
-        <div>
-            <p class="font-medium {% if type == 'error' %}text-red-800 dark:text-red-200{% else %}text-green-800 dark:text-green-200{% endif %}">
-                {{ message }}
-            </p>
-            <p class="text-sm text-gray-600 dark:text-gray-400">{{ timestamp|date:"g:i A" }}</p>
-        </div>
-    </div>
+    <p>{{ message }}</p>
+    <p class="text-sm text-gray-600">{{ timestamp|date:"g:i A" }}</p>
 </div> 

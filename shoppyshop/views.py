@@ -174,6 +174,9 @@ async def event_stream(request):
                 'message': event_data.get('message', 'Update received'),
                 'timestamp': datetime.now()
             })
+            
+            # Clean up the HTML - remove newlines and collapse multiple spaces
+            notification_html = ' '.join(notification_html.split())
             logger.debug(f"Rendered notification HTML: {notification_html!r}")
             
             await queue.put({
@@ -232,7 +235,7 @@ async def event_stream(request):
             while True:
                 event = await queue.get()
                 logger.info(f"Got event for {connection_id}: {event}")
-                # Format SSE event - don't JSON encode HTML content
+                # Send the event data directly without JSON encoding
                 message = f"event: {event['event']}\ndata: {event['data']}\n\n"
                 logger.debug(f"Sending SSE message: {message!r}")
                 yield message
