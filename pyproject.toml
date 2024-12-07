@@ -25,6 +25,7 @@ pytest-watcher = "^0.4.3"
 pytest-asyncio = "^0.23.5"
 pytest-django = "^4.8.0"
 pytest-mock = "^3.12.0"
+pytest-cov = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -32,13 +33,21 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "shoppyshops.settings"
-python_files = "test_*.py"
+python_files = ["test_*.py", "*_test.py"]
 python_functions = "test_*"
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-p no:warnings"
+addopts = "-v --tb=short --strict-markers -p no:warnings"
 markers = [
     "mock: mark test to run with mock data",
     "real: mark test to run with real APIs",
-    "use_real_apis: mark test to run with real APIs"
+    "use_real_apis: mark test to run with real APIs",
+    "integration: mark integration tests",
+    "unit: mark unit tests",
+    "slow: mark slow running tests",
+    "htmx: mark tests that verify HTMX interactions"
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
 ]

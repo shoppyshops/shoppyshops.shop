@@ -35,8 +35,8 @@ A Django-based e-commerce platform with AI integration and real-time streaming c
    # Terminal 2: Live reload
    ./manage.py livereload
 
-   # Terminal 3: Pytest watch
-   ptw -- -vv
+   # Terminal 3: Test watcher
+   ptw . --now  # Run tests immediately and watch for changes
    ```
 
 ## Development Setup
@@ -73,3 +73,53 @@ shoppyshops.shop/
 ## Contributing
 - See `METHODOLOGY.md` for development approach
 - See `SPECIFICATIONS.md` for feature details
+
+## Running Tests
+
+There are several ways to run tests:
+
+1. Run tests once:
+   ```bash
+   pytest
+   ```
+
+2. Watch mode (automatically run tests when files change):
+   ```bash
+   ptw .  # Interactive mode
+   # OR
+   ptw . --now  # Run tests immediately and watch for changes
+   ```
+   
+   Interactive controls in watch mode:
+   - `Enter`: Run tests manually
+   - `r`: Reset runner arguments
+   - `c`: Change runner arguments
+   - `f`: Run only failed tests
+   - `p`: Enable PDB debugger on failures
+   - `v`: Increase verbosity
+   - `e`: Clear screen
+   - `q`: Quit watcher
+
+3. Watch mode with coverage reporting:
+   ```bash
+   pytest --cov=shoppyshops --cov-report=term-missing
+   ```
+
+4. Generate HTML coverage report:
+   ```bash
+   pytest --cov=shoppyshops --cov-report=html
+   ```
+
+## Development Servers
+Run these in separate terminals:
+
+```bash
+# Terminal 1: Django development server
+./manage.py runserver
+
+# Terminal 2: Live reload
+./manage.py livereload
+
+# Terminal 3: Test watcher
+ptw . --now  # Run tests immediately and watch for changes
+```
