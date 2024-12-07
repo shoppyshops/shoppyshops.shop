@@ -115,17 +115,14 @@ class ShoppyShop:
     _instance = None
     _initialized = False
     _lock = asyncio.Lock()
+    _default_handlers_registered = False
     
     def __init__(self):
-        """Initialize services with credentials from environment"""
-        # Skip initialization if already done
-        if self._initialized:
+        """Initialize basic attributes but defer service initialization"""
+        # Skip if this instance is already initialized
+        if ShoppyShop._initialized and self == ShoppyShop._instance:
             return
             
-        from shopify.shopify import Shopify
-        from ebay.ebay import Ebay
-        from meta.meta import Meta
-        
         # Initialize logging
         self.logger = logging.getLogger(__name__)
         
@@ -135,6 +132,29 @@ class ShoppyShop:
         # Task scheduling
         self.tasks: List[Task] = []
         self.task_loop: Optional[asyncio.Task] = None
+    
+    @classmethod
+    async def get_instance(cls) -> 'ShoppyShop':
+        """Get or create a singleton instance with async initialization"""
+        async with cls._lock:
+            if not cls._instance:
+                cls._instance = cls()
+                await cls._instance._initialize_full()
+            return cls._instance
+
+    async def initialize_services(self) -> None:
+        """Public method for initializing services (for backward compatibility)"""
+        if not ShoppyShop._initialized:
+            await self._initialize_full()
+
+    async def _initialize_full(self) -> None:
+        """Complete initialization of the instance"""
+        if ShoppyShop._initialized:
+            return
+            
+        from shopify.shopify import Shopify
+        from ebay.ebay import Ebay
+        from meta.meta import Meta
         
         try:
             # Shopify credentials
@@ -167,28 +187,37 @@ class ShoppyShop:
             self.ebay = Ebay(ebay_creds)
             self.meta = Meta(meta_creds)
             
-            # Register default event handlers
-            self.on(ServiceEvent.ORDER_CREATED, self._handle_order_created)
+            # Initialize services
+            await self.shopify.initialize()
+            await self.ebay.initialize()
+            await self.meta.initialize()
             
-            self._initialized = True
+            # Register default event handlers only once
+            await self._register_default_handlers()
+            
+            # Start the task scheduler
+            self.task_loop = asyncio.create_task(self._task_scheduler())
+            
+            ShoppyShop._initialized = True
+            self.logger.info("ShoppyShop fully initialized")
             
         except AttributeError as e:
             raise ServiceCredentialsError(f"Missing environment variable: {str(e)}")
+        except Exception as e:
+            ShoppyShop._initialized = False
+            raise ServiceInitializationError(f"Failed to initialize services: {str(e)}")
 
-    @classmethod
-    async def get_instance(cls) -> 'ShoppyShop':
-        """Get or create a singleton instance with async initialization"""
-        async with cls._lock:
-            if not cls._instance:
-                cls._instance = cls()
-            if not cls._instance._initialized:
-                await cls._instance.initialize_services()
-            return cls._instance
+    async def _register_default_handlers(self) -> None:
+        """Register default event handlers"""
+        if not ShoppyShop._default_handlers_registered:
+            self.on(ServiceEvent.ORDER_CREATED, self._handle_order_created)
+            ShoppyShop._default_handlers_registered = True
 
     def on(self, event: ServiceEvent, handler: Callable) -> None:
-        """Register an event handler"""
-        self.event_handlers[event].append(handler)
-        self.logger.debug(f"Registered handler for event: {event.value}")
+        """Register an event handler if not already registered"""
+        if handler not in self.event_handlers[event]:
+            self.event_handlers[event].append(handler)
+            self.logger.debug(f"Registered handler for event: {event.value}")
 
     async def emit(self, event: ServiceEvent, data: Any = None) -> None:
         """Emit an event to all registered handlers"""
@@ -259,20 +288,6 @@ class ShoppyShop:
             self.logger.error(f"Error processing Shopify order: {e}")
             raise
 
-    async def initialize_services(self) -> None:
-        """Initialize all service connections"""
-        try:
-            await self.shopify.initialize()
-            await self.ebay.initialize()
-            await self.meta.initialize()
-            
-            # Start the task scheduler
-            self.task_loop = asyncio.create_task(self._task_scheduler())
-            
-        except Exception as e:
-            self._initialized = False
-            raise ServiceInitializationError(f"Failed to initialize services: {str(e)}")
-
     async def _task_scheduler(self) -> None:
         """Background task scheduler for periodic tasks"""
         while True:
@@ -304,6 +319,9 @@ class ShoppyShop:
 
     async def shutdown(self) -> None:
         """Gracefully shutdown the ShoppyShop instance"""
+        if not ShoppyShop._initialized:
+            return
+            
         self.logger.info("Shutting down ShoppyShop...")
         
         # Cancel task scheduler
@@ -319,13 +337,14 @@ class ShoppyShop:
             if hasattr(service, 'client') and service.client:
                 await service.client.close()
         
-        self._initialized = False
+        ShoppyShop._initialized = False
+        ShoppyShop._default_handlers_registered = False
         self.logger.info("ShoppyShop shutdown complete")
 
     async def __aenter__(self):
         """Async context manager entry"""
-        if not self._initialized:
-            await self.initialize_services()
+        if not ShoppyShop._initialized:
+            await self._initialize_full()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):

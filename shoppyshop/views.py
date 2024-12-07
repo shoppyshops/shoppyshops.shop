@@ -151,20 +151,37 @@ async def event_stream(request):
             })
         
         # Register handlers for events we want to stream
-        shop.on(ServiceEvent.ORDER_CREATED, lambda data: handle_event({
-            'type': 'success',
-            'message': f"New order received: #{data.get('order_id')}"
-        }))
+        handlers = []
         
-        shop.on(ServiceEvent.ORDER_UPDATED, lambda data: handle_event({
-            'type': 'success',
-            'message': f"Order #{data.get('order_id')} has been updated"
-        }))
+        def register_handler(event, message_func):
+            async def handler(data):
+                await handle_event(message_func(data))
+            shop.on(event, handler)
+            handlers.append((event, handler))
         
-        shop.on(ServiceEvent.ERROR, lambda data: handle_event({
-            'type': 'error',
-            'message': f"Error: {data.get('error')}"
-        }))
+        register_handler(
+            ServiceEvent.ORDER_CREATED,
+            lambda data: {
+                'type': 'success',
+                'message': f"New order received: #{data.get('order_id')}"
+            }
+        )
+        
+        register_handler(
+            ServiceEvent.ORDER_UPDATED,
+            lambda data: {
+                'type': 'success',
+                'message': f"Order #{data.get('order_id')} has been updated"
+            }
+        )
+        
+        register_handler(
+            ServiceEvent.ERROR,
+            lambda data: {
+                'type': 'error',
+                'message': f"Error: {data.get('error')}"
+            }
+        )
         
         try:
             while True:
@@ -174,10 +191,11 @@ async def event_stream(request):
             logger.error(f"Error in event stream: {e}")
         finally:
             # Clean up event handlers
-            shop.event_handlers[ServiceEvent.ORDER_CREATED].clear()
-            shop.event_handlers[ServiceEvent.ORDER_UPDATED].clear()
-            shop.event_handlers[ServiceEvent.ERROR].clear()
-    
+            for event, handler in handlers:
+                if handler in shop.event_handlers[event]:
+                    shop.event_handlers[event].remove(handler)
+            logger.debug("Event handlers cleaned up")
+
     return StreamingHttpResponse(
         event_generator(),
         content_type='text/event-stream'
